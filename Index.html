@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Usesh Thapa Magar — Security Researcher</title>
+<meta name="description" content="Menuka Kalikote — application security learner and bug bounty hunter, focused on IDOR and business logic vulnerabilities.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f7f7f5;
+    --surface:#ffffff;
+    --border:#e5e4e0;
+    --text:#181a1c;
+    --text-soft:#5b6169;
+    --text-faint:#8a9099;
+    --accent:#2c5f7c;
+    --accent-soft:#e8eef1;
+    --accent-dark:#1e4457;
+    --accent-text:#1e4457;
+    --status:#8a6d1f;
+    --status-bg:#f4efdf;
+    --sans:'Public Sans', system-ui, sans-serif;
+    --head:'Space Grotesk', system-ui, sans-serif;
+    --mono:'IBM Plex Mono', ui-monospace, monospace;
+    --radius:10px;
+    --nav-bg:rgba(247,247,245,0.85);
+  }
+  html[data-theme="dark"]{
+    --bg:#121417;
+    --surface:#1a1d21;
+    --border:#2b2f34;
+    --text:#e9e8e4;
+    --text-soft:#a6acb3;
+    --text-faint:#71787f;
+    --accent:#6fa8c9;
+    --accent-soft:#1e2e37;
+    --accent-dark:#14374a;
+    --accent-text:#9cc7e0;
+    --status:#d9b65c;
+    --status-bg:#2a2416;
+    --nav-bg:rgba(18,20,23,0.85);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:var(--sans); font-size:16px; line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+    transition:background 0.4s ease, color 0.4s ease;
+  }
+  @media (prefers-reduced-motion: reduce){
+    body{transition:none;}
+  }
+
+  /* ---------- Theme toggle ---------- */
+  .theme-toggle{
+    display:flex; align-items:center; justify-content:center;
+    width:38px; height:38px; border-radius:50%;
+    border:1px solid var(--border); background:var(--surface);
+    color:var(--text); cursor:pointer; flex-shrink:0;
+    transition:border-color 0.3s ease, background 0.3s ease, transform 0.3s ease;
+  }
+  .theme-toggle:hover{border-color:var(--accent); transform:rotate(12deg);}
+  .theme-toggle svg{width:18px; height:18px;}
+  .theme-toggle .icon-moon{display:none;}
+  html[data-theme="dark"] .theme-toggle .icon-sun{display:none;}
+  html[data-theme="dark"] .theme-toggle .icon-moon{display:block;}
+
+  /* ---------- View Transitions: day/night wipe ---------- */
+  ::view-transition-old(root),
+  ::view-transition-new(root){
+    animation:none;
+    mix-blend-mode:normal;
+  }
+  ::view-transition-old(root){ z-index:1; }
+  ::view-transition-new(root){ z-index:2; }
+  @keyframes theme-reveal{
+    from{ clip-path:circle(0% at var(--reveal-x,50%) var(--reveal-y,50%)); }
+    to{ clip-path:circle(150% at var(--reveal-x,50%) var(--reveal-y,50%)); }
+  }
+  html.animate-theme::view-transition-new(root){
+    animation:theme-reveal 0.65s ease forwards;
+  }
+  @media (prefers-reduced-motion: reduce){
+    html.animate-theme::view-transition-new(root){ animation:none; }
+  }
+  a{color:var(--accent); text-decoration:none;}
+  a:hover{text-decoration:underline;}
+  a:focus-visible, button:focus-visible{outline:2px solid var(--accent); outline-offset:3px;}
+  img{max-width:100%;}
+
+  .wrap{max-width:960px; margin:0 auto; padding:0 24px;}
+  @media (max-width:600px){ .wrap{padding:0 18px;} }
+
+  /* ---------- Nav ---------- */
+  header.topnav{
+    position:sticky; top:0; z-index:50;
+    background:var(--nav-bg);
+    backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--border);
+    transition:background 0.4s ease, border-color 0.4s ease;
+  }
+  .nav-inner{
+    max-width:960px; margin:0 auto; padding:16px 24px;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .nav-name{font-family:var(--head); font-weight:600; font-size:17px; color:var(--text);}
+  .nav-name a{color:inherit;}
+  .nav-name a:hover{text-decoration:none;}
+  .navlinks{display:flex; gap:26px; list-style:none;}
+  .navlinks a{
+    color:var(--text-soft); font-size:14px; font-weight:500;
+  }
+  .navlinks a:hover{color:var(--accent); text-decoration:none;}
+  .nav-toggle{
+    display:none; background:none; border:1px solid var(--border); border-radius:6px;
+    width:38px; height:38px; cursor:pointer; color:var(--text);
+  }
+  @media (max-width:760px){
+    .navlinks{
+      display:none; position:absolute; top:100%; left:0; right:0;
+      background:var(--surface); border-bottom:1px solid var(--border);
+      flex-direction:column; gap:0; padding:8px 0;
+    }
+    .navlinks.open{display:flex;}
+    .navlinks a{padding:12px 24px; display:block; border-bottom:1px solid var(--border);}
+    .nav-toggle{display:block;}
+  }
+
+  /* ---------- Hero ---------- */
+  .hero{padding:76px 0 60px 0;}
+  .eyebrow{
+    font-family:var(--mono); font-size:12px; letter-spacing:0.06em; text-transform:uppercase;
+    color:var(--accent); margin-bottom:16px; display:inline-block;
+    background:var(--accent-soft); padding:5px 12px; border-radius:20px;
+  }
+  h1.hero-title{
+    font-family:var(--head); font-weight:700;
+    font-size:clamp(32px, 5vw, 46px); line-height:1.15;
+    color:var(--text); margin-bottom:16px; max-width:14ch;
+  }
+  .hero-lede{
+    font-size:18px; color:var(--text-soft); max-width:56ch; margin-bottom:18px;
+  }
+  .hero-actions{display:flex; gap:12px; flex-wrap:wrap;}
+  .btn{
+    font-family:var(--sans); font-weight:600; font-size:14.5px;
+    padding:12px 22px; border-radius:8px; border:1px solid var(--border);
+    color:var(--text); background:var(--surface); display:inline-block;
+  }
+  .btn:hover{border-color:var(--accent); color:var(--accent); text-decoration:none;}
+  .btn.primary{background:var(--accent); color:#fff; border-color:var(--accent);}
+  .btn.primary:hover{background:var(--accent-dark); color:#fff;}
+
+  /* ---------- Sections ---------- */
+  section{padding:56px 0; border-top:1px solid var(--border);}
+  .section-head{margin-bottom:30px;}
+  .section-label{
+    font-family:var(--mono); font-size:12px; letter-spacing:0.08em; text-transform:uppercase;
+    color:var(--text-faint); margin-bottom:8px; display:block;
+  }
+  h2.section-title{
+    font-family:var(--head); font-weight:600; font-size:26px; color:var(--text);
+  }
+  .section-desc{color:var(--text-soft); font-size:15px; margin-top:8px; max-width:60ch;}
+
+  .card{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:24px 26px;
+  }
+  .card + .card{margin-top:14px;}
+  .card p{color:var(--text); font-size:15px; margin-bottom:12px;}
+  .card p:last-child{margin-bottom:0;}
+  .card p.soft{color:var(--text-soft);}
+
+
+
+  .tag-row{display:flex; flex-wrap:wrap; gap:8px; margin-top:14px;}
+  .tag{
+    font-family:var(--mono); font-size:12px; color:var(--accent-text);
+    background:var(--accent-soft); padding:5px 12px; border-radius:20px;
+  }
+
+  ul.plain{list-style:none;}
+  ul.plain li{
+    padding-left:20px; position:relative; margin-bottom:10px; color:var(--text); font-size:15px;
+  }
+  ul.plain li::before{
+    content:"→"; position:absolute; left:0; color:var(--accent); font-size:14px;
+  }
+
+  /* Empty state */
+  .empty-state{
+    border:1px dashed var(--border); border-radius:var(--radius);
+    background:var(--bg); padding:22px 24px; text-align:left;
+  }
+  .empty-state .head{font-weight:600; font-size:14.5px; color:var(--text); margin-bottom:4px;}
+  .empty-state .sub{font-size:13.5px; color:var(--text-soft);}
+
+  /* Writeup template */
+  .template-list{list-style:none; counter-reset:step;}
+  .template-list li{
+    counter-increment:step;
+    padding-left:34px; position:relative; margin-bottom:10px; font-size:14px; color:var(--text-soft);
+  }
+  .template-list li::before{
+    content:counter(step);
+    position:absolute; left:0; top:-1px;
+    width:22px; height:22px; border-radius:50%;
+    background:var(--accent-soft); color:var(--accent-text);
+    font-family:var(--mono); font-size:11.5px; font-weight:600;
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  /* Contact */
+  .contact-grid{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px;
+  }
+  .contact-card{
+    border:1px solid var(--border); border-radius:var(--radius); background:var(--surface);
+    padding:18px 20px;
+  }
+  .contact-card .label{
+    font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:0.06em;
+    color:var(--text-faint); margin-bottom:8px;
+  }
+  .contact-card a{font-weight:600; color:var(--text); font-size:15px;}
+  .contact-card a:hover{color:var(--accent);}
+
+  footer{
+    border-top:1px solid var(--border); padding:30px 0 50px 0;
+    font-size:13px; color:var(--text-faint);
+    display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;
+  }
+
+  ::selection{background:var(--accent); color:#fff;}
+</style>
+</head>
+<body>
+
+<header class="topnav">
+  <div class="nav-inner">
+    <div class="nav-name"><a href="#top">Usesh Thapa Magar</a></div>
+    <ul class="navlinks" id="navlinks">
+      <li><a href="#about">About</a></li>
+      <li><a href="#writeups">Writeups</a></li>
+      <li><a href="#bounty">Bug Bounty</a></li>
+      <li><a href="#certs">Certifications</a></li>
+      <li><a href="#blog">Blog</a></li>
+      <li><a href="#tools">Tools</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <button class="theme-toggle" id="themeToggle" aria-label="Switch between light and dark theme">
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false">☰</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+
+    <!-- HERO -->
+    <section class="hero" style="border-top:none;" id="top">
+      <span class="eyebrow">Application Security</span>
+      <h1 class="hero-title">UseshThapaMagar</h1>
+      <p class="hero-lede">I study web application security with a deliberate focus on IDOR and business logic vulnerabilities — currently building independent execution skills through bug bounty hunting and hands-on machines.</p>
+      <div class="hero-actions">
+        <a class="btn primary" href="#writeups">View writeups</a>
+        <a class="btn" href="#contact">Get in touch</a>
+      </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section id="about">
+      <div class="section-head">
+        <span class="section-label">About</span>
+        <h2 class="section-title">Where I am right now</h2>
+      </div>
+      <div class="card">
+        <p>I'm a security researcher focused on identifying vulnerabilities in web applications and responsibly disclosing or reporting them.</p>
+      </div>
+    </section>
+
+    <!-- WRITEUPS -->
+    <section id="writeups">
+      <div class="section-head">
+        <span class="section-label">Writeups</span>
+        <h2 class="section-title">The most important section here</h2>
+        <p class="section-desc">Real methodology and real mistakes — added the moment a box is finished independently, start to finish.</p>
+      </div>
+
+      <div class="card">
+        <div class="empty-state">
+          <div class="head">No writeups published yet</div>
+          <div class="sub">The first one goes up as soon as a machine is completed independently, end to end.</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <p class="soft" style="margin-bottom:14px;">Every writeup here will follow this structure:</p>
+        <ol class="template-list">
+          <li>Target/box name</li>
+          <li>Methodology — recon → enumeration → exploitation → privesc</li>
+          <li>Actual commands used</li>
+          <li>What went wrong, and how it got debugged</li>
+          <li>Screenshots or terminal output of key steps</li>
+          <li>Lessons learned — one line</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- BOUNTY -->
+    <section id="bounty">
+      <div class="section-head">
+        <span class="section-label">Bug Bounty</span>
+        <h2 class="section-title">Findings</h2>
+        <p class="section-desc">Public only where a program's disclosure policy allows it.</p>
+      </div>
+      <div class="card">
+        <p>Currently active on HackerOne, focused deliberately on IDOR and business-logic bugs rather than a broad scope.</p>
+        <p class="soft">Track record so far: a handful of informational reports, two duplicates, and one valid-but-unpaid, undisclosed finding. No bounties paid yet — this section fills in as disclosed, public reports become available.</p>
+      </div>
+    </section>
+
+    <!-- CERTS -->
+    <section id="certs">
+      <div class="section-head">
+        <span class="section-label">Certifications</span>
+        <h2 class="section-title">Certifications & learning path</h2>
+      </div>
+      <div class="card">
+        <div class="empty-state">
+          <div class="head">No badges added yet</div>
+          <div class="sub">TryHackMe / HTB badges, eJPT, Security+ — added here as they're completed.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BLOG -->
+    <section id="blog">
+      <div class="section-head">
+        <span class="section-label">Notes</span>
+        <h2 class="section-title">Blog</h2>
+        <p class="section-desc">Short, real troubleshooting stories — often more useful than a polished writeup.</p>
+      </div>
+      <div class="card">
+        <div class="empty-state">
+          <div class="head">No posts yet</div>
+          <div class="sub">First post idea already queued: the TERM=dumb / systemctl SUID debugging story from Vulnversity.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TOOLS -->
+    <section id="tools">
+      <div class="section-head">
+        <span class="section-label">Tools</span>
+        <h2 class="section-title">Scripts & utilities</h2>
+      </div>
+      <div class="card">
+        <div class="empty-state">
+          <div class="head">Nothing published yet</div>
+          <div class="sub">Small recon scripts, wordlists, and Burp configs will be added here as they're built.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact">
+      <div class="section-head">
+        <span class="section-label">Contact</span>
+        <h2 class="section-title">Get in touch</h2>
+        <p class="section-desc">Fill in your real links before publishing.</p>
+      </div>
+      <div class="contact-grid">
+        <div class="contact-card">
+          <div class="label">GitHub</div>
+          <a href="https://github.com/YOUR-USERNAME" target="_blank" rel="noopener">github.com/YOUR-USERNAME</a>
+        </div>
+        <div class="contact-card">
+          <div class="label">LinkedIn</div>
+          <a href="https://linkedin.com/in/YOUR-USERNAME" target="_blank" rel="noopener">linkedin.com/in/YOUR-USERNAME</a>
+        </div>
+        <div class="contact-card">
+          <div class="label">HackerOne</div>
+          <a href="https://hackerone.com/YOUR-USERNAME" target="_blank" rel="noopener">hackerone.com/YOUR-USERNAME</a>
+        </div>
+        <div class="contact-card">
+          <div class="label">Email</div>
+          <a href="mailto:you@kalikote.com.np">you@kalikote.com.np</a>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <footer class="wrap">
+    <div>© <span id="year"></span> Menuka Kalikote</div>
+    <div>Built to grow — new sections filled in as work is completed.</div>
+  </footer>
+</main>
+
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  // ---------- Theme toggle ----------
+  const root = document.documentElement;
+  const themeBtn = document.getElementById('themeToggle');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Start from system preference (no cross-session storage used)
+  if (prefersDark) root.setAttribute('data-theme', 'dark');
+
+  function applyTheme(){
+    const isDark = root.getAttribute('data-theme') === 'dark';
+    root.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  }
+
+  themeBtn.addEventListener('click', (e) => {
+    const rect = themeBtn.getBoundingClientRect();
+    const x = ((rect.left + rect.width / 2) / window.innerWidth) * 100;
+    const y = ((rect.top + rect.height / 2) / window.innerHeight) * 100;
+    root.style.setProperty('--reveal-x', x + '%');
+    root.style.setProperty('--reveal-y', y + '%');
+
+    if (reduceMotion || !document.startViewTransition) {
+      applyTheme();
+      return;
+    }
+    root.classList.add('animate-theme');
+    const transition = document.startViewTransition(() => applyTheme());
+    transition.finished.finally(() => root.classList.remove('animate-theme'));
+  });
+
+  const toggle = document.getElementById('navToggle');
+  const navlinks = document.getElementById('navlinks');
+  toggle.addEventListener('click', () => {
+    const isOpen = navlinks.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', isOpen);
+  });
+  navlinks.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', () => {
+      navlinks.classList.remove('open');
+      toggle.setAttribute('aria-expanded', 'false');
+    });
+  });
+</script>
+
+</body>
+</html>
