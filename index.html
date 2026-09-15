@@ -176,7 +176,16 @@
   .card p:last-child{margin-bottom:0;}
   .card p.soft{color:var(--text-soft);}
 
-
+  /* Stats */
+  .stats-row{display:flex; gap:36px; margin:6px 0 4px 0; flex-wrap:wrap;}
+  .stat{min-width:90px;}
+  .stat-num{
+    font-family:var(--head); font-weight:700; font-size:40px; color:var(--accent-text); line-height:1;
+  }
+  .stat-label{
+    font-family:var(--mono); font-size:11.5px; color:var(--text-faint);
+    text-transform:uppercase; letter-spacing:0.04em; margin-top:8px;
+  }
 
   .tag-row{display:flex; flex-wrap:wrap; gap:8px; margin-top:14px;}
   .tag{
@@ -321,11 +330,14 @@
       <div class="section-head">
         <span class="section-label">Bug Bounty</span>
         <h2 class="section-title">Findings</h2>
-        <p class="section-desc">Public only where a program's disclosure policy allows it.</p>
       </div>
       <div class="card">
-        <p>Currently active on HackerOne, focused deliberately on IDOR and business-logic bugs rather than a broad scope.</p>
-        <p class="soft">Track record so far: a handful of informational reports, two duplicates, and one valid-but-unpaid, undisclosed finding. No bounties paid yet — this section fills in as disclosed, public reports become available.</p>
+        <div class="stats-row">
+          <div class="stat">
+            <div class="stat-num">3</div>
+            <div class="stat-label">Valid findings</div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -338,7 +350,6 @@
       <div class="card">
         <div class="empty-state">
           <div class="head">No badges added yet</div>
-          <div class="sub">TryHackMe / HTB badges, eJPT, Security+ — added here as they're completed.</div>
         </div>
       </div>
     </section>
@@ -353,7 +364,6 @@
       <div class="card">
         <div class="empty-state">
           <div class="head">No posts yet</div>
-          <div class="sub">First post idea already queued: the TERM=dumb / systemctl SUID debugging story from Vulnversity.</div>
         </div>
       </div>
     </section>
@@ -367,7 +377,6 @@
       <div class="card">
         <div class="empty-state">
           <div class="head">Nothing published yet</div>
-          <div class="sub">Small recon scripts, wordlists, and Burp configs will be added here as they're built.</div>
         </div>
       </div>
     </section>
@@ -377,19 +386,15 @@
       <div class="section-head">
         <span class="section-label">Contact</span>
         <h2 class="section-title">Get in touch</h2>
-        <p class="section-desc">Fill in your real links before publishing.</p>
       </div>
+      <div class="contact-grid">
         <div class="contact-card">
           <div class="label">LinkedIn</div>
           <a href="https://linkedin.com/in/YOUR-USERNAME" target="_blank" rel="noopener">linkedin.com/in/YOUR-USERNAME</a>
         </div>
         <div class="contact-card">
-          <div class="label">HackerOne</div>
-          <a href="https://hackerone.com/YOUR-USERNAME" target="_blank" rel="noopener">hackerone.com/YOUR-USERNAME</a>
-        </div>
-        <div class="contact-card">
           <div class="label">Email</div>
-          <a href="mailto:you@kalikote.com.np"></a>
+          <a href="mailto:YOUR-EMAIL@example.com">YOUR-EMAIL@example.com</a>
         </div>
       </div>
     </section>
